@@ -15,24 +15,23 @@ app.get('/user', function(req, res) {
     User.find({ status: true })
         .skip(from)
         .limit(until)
-        .exec((err, users) => {
-            if (err) {
-                return res.status(400).json({
-                    ok: false,
-                    err
-                });
-            }
-
+        .exec()
+        .then(async(users) => {
             // Return total count of users in DB
-            User.count({ status: true }, (err, count) => {
-                res.json({
-                    ok: true,
-                    users,
-                    count
-                });
+            let count = await User.countDocuments({ status: true });
+
+            res.json({
+                ok: true,
+                users,
+                count
             });
         })
-
+        .catch(err => {
+            res.status(400).json({
+                ok: false,
+                err
+            });
+        });
 
 })
 
