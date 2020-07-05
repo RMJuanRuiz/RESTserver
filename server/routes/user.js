@@ -1,12 +1,39 @@
 const express = require('express');
 
 const bcrypt = require('bcrypt');
+const _ = require('underscore');
+
 const User = require('../models/user');
 
 const app = express();
 
 app.get('/user', function(req, res) {
-    res.json('get user');
+
+    let from = req.query.from > 0 ? Number(req.query.from - 1) : 0;
+    let until = req.query.until > 0 ? Number(req.query.until) : 5;
+
+    User.find({ status: true })
+        .skip(from)
+        .limit(until)
+        .exec((err, users) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
+
+            // Return total count of users in DB
+            User.count({ status: true }, (err, count) => {
+                res.json({
+                    ok: true,
+                    users,
+                    count
+                });
+            });
+        })
+
+
 })
 
 app.post('/user', function(req, res) {
@@ -15,7 +42,14 @@ app.post('/user', function(req, res) {
     let encriptedPassword = '';
 
     if (body.password) {
-        encriptedPassword = bcrypt.hashSync(body.password, 10);
+        if ((body.password).length < 8) {
+            return res.status(406).json({
+                ok: false,
+                err: 'Password must contain at least 8 characters'
+            })
+        } else {
+            encriptedPassword = bcrypt.hashSync(body.password, 10);
+        }
     }
 
     let user = new User({
@@ -30,10 +64,8 @@ app.post('/user', function(req, res) {
             return res.status(400).json({
                 ok: false,
                 err
-            })
+            });
         }
-
-        //userDB.password = null;
 
         res.json({
             ok: true,
@@ -45,14 +77,73 @@ app.post('/user', function(req, res) {
 
 app.put('/user/:id', function(req, res) {
     let id = req.params.id;
+    let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'status']);
+    console.log(body);
+    let options = {
+        new: true,
+        runValidators: true,
+        context: 'query'
+    }
 
-    res.json({
-        id
-    });
+    User.findByIdAndUpdate(id, body, options, (err, userDB) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err
+            });
+        }
+
+        if (userDB === null) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: 'User not found'
+                }
+            });
+        }
+
+        res.json({
+            ok: true,
+            user: userDB
+        });
+    })
+
+
+
+
 })
 
-app.delete('/user', function(req, res) {
-    res.json('delete user');
+app.delete('/user/:id', function(req, res) {
+    let id = req.params.id;
+    let changeStatus = {
+        status: false
+    }
+
+    User.findByIdAndUpdate(id, changeStatus, (err, deletedUser) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err
+            });
+        }
+
+        if (deletedUser === null) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: 'User not found'
+                }
+            });
+        }
+
+        res.json({
+            ok: true,
+            user: {
+                message: `User ${deletedUser.name} was deleted`
+            }
+        });
+
+    });
 })
 
 

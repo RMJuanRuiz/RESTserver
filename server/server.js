@@ -13,7 +13,8 @@ app.use(require('./routes/user'));
 mongoose.connect('mongodb://localhost:27017/coffeeShop', {
     useCreateIndex: true,
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
 }, (err, resp) => {
     if (err) throw err;
     console.log('DB Online');
