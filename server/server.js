@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use(require('./routes/user'));
 
-mongoose.connect('mongodb://localhost:27017/coffeeShop', {
+mongoose.connect(process.env.URLDB, {
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
