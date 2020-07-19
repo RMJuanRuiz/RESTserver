@@ -8,7 +8,8 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.use(require('./routes/user'));
+// Routes global configuration
+app.use(require('./routes/index'));
 
 mongoose.connect(process.env.URLDB, {
     useCreateIndex: true,

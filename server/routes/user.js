@@ -4,10 +4,11 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 
 const User = require('../models/user');
+const { verifyToken, verifyRole } = require('../middlewares/authentication');
 
 const app = express();
 
-app.get('/user', function(req, res) {
+app.get('/user', verifyToken, (req, res) => {
 
     let from = req.query.from > 0 ? Number(req.query.from - 1) : 0;
     let until = req.query.until > 0 ? Number(req.query.until) : 5;
@@ -35,7 +36,7 @@ app.get('/user', function(req, res) {
 
 })
 
-app.post('/user', function(req, res) {
+app.post('/user', [verifyToken, verifyRole], function(req, res) {
     let body = req.body;
 
     let encriptedPassword = '';
@@ -74,10 +75,9 @@ app.post('/user', function(req, res) {
     });
 })
 
-app.put('/user/:id', function(req, res) {
+app.put('/user/:id', [verifyToken, verifyRole], function(req, res) {
     let id = req.params.id;
     let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'status']);
-    console.log(body);
     let options = {
         new: true,
         runValidators: true,
@@ -112,7 +112,7 @@ app.put('/user/:id', function(req, res) {
 
 })
 
-app.delete('/user/:id', function(req, res) {
+app.delete('/user/:id', [verifyToken, verifyRole], function(req, res) {
     let id = req.params.id;
     let changeStatus = {
         status: false
