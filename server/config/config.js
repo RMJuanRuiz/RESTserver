@@ -34,3 +34,8 @@ if (process.env.NODE_ENV === 'dev') {
 }
 
 process.env.URLDB = urlDB;
+
+/**
+ * Google sign in client id
+ */
+process.env.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '959963359112-jn9ea4f9vidgpedu794odunt0q8eqagm.apps.googleusercontent.com';
