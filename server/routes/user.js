@@ -8,6 +8,9 @@ const { verifyToken, verifyRole } = require('../middlewares/authentication');
 
 const app = express();
 
+/**
+ * Return all users
+ */
 app.get('/user', verifyToken, (req, res) => {
 
     let from = req.query.from > 0 ? Number(req.query.from - 1) : 0;
@@ -36,6 +39,10 @@ app.get('/user', verifyToken, (req, res) => {
 
 })
 
+
+/**
+ * Create a new user
+ */
 app.post('/user', [verifyToken, verifyRole], function(req, res) {
     let body = req.body;
 
@@ -61,7 +68,7 @@ app.post('/user', [verifyToken, verifyRole], function(req, res) {
 
     user.save((err, userDB) => {
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
                 err
             });
@@ -75,6 +82,9 @@ app.post('/user', [verifyToken, verifyRole], function(req, res) {
     });
 })
 
+/**
+ * Update the requested user
+ */
 app.put('/user/:id', [verifyToken, verifyRole], function(req, res) {
     let id = req.params.id;
     let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'status']);
@@ -112,6 +122,9 @@ app.put('/user/:id', [verifyToken, verifyRole], function(req, res) {
 
 })
 
+/**
+ * Delete the requested user
+ */
 app.delete('/user/:id', [verifyToken, verifyRole], function(req, res) {
     let id = req.params.id;
     let changeStatus = {
