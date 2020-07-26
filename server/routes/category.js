@@ -1,6 +1,8 @@
 const express = require('express');
 let app = express();
+
 let Category = require('../models/category');
+let Product = require('../models/product');
 
 const { verifyToken, verifyRole } = require('../middlewares/authentication');
 
@@ -14,12 +16,12 @@ app.get('/category', verifyToken, (req, res) => {
         .exec()
         .then(async(categories) => {
             // Return total count of categories in DB
-            let count = await Category.countDocuments();
+            let totalCategories = await Category.countDocuments();
 
             res.json({
                 ok: true,
                 categories,
-                count
+                totalCategories
             });
         })
         .catch(err => {
@@ -37,28 +39,29 @@ app.get('/category', verifyToken, (req, res) => {
 app.get('/category/:id', verifyToken, (req, res) => {
     let id = req.params.id;
 
-    Category.findById(id, (err, category) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            });
-        }
+    Category.findById(id)
+        .populate('user', 'name email')
+        .exec((err, category) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
 
-        if (category === null) {
-            return res.status(400).json({
-                ok: false,
-                err: {
-                    message: 'Category not found'
-                }
+            if (category === null) {
+                return res.status(400).json({
+                    ok: false,
+                    err: {
+                        message: 'Category not found'
+                    }
+                });
+            }
+            res.json({
+                ok: true,
+                category,
             });
-        }
-        res.json({
-            ok: true,
-            category,
         });
-    });
-
 });
 
 /**
@@ -80,7 +83,7 @@ app.post('/category', [verifyToken, verifyRole], (req, res) => {
             });
         }
 
-        res.json({
+        res.status(201).json({
             ok: true,
             category: categoryDB
         })
@@ -134,7 +137,7 @@ app.put('/category/:id', [verifyToken, verifyRole], (req, res) => {
 app.delete('/category/:id', [verifyToken, verifyRole], (req, res) => {
     let id = req.params.id;
 
-    Category.findByIdAndRemove(id, (err, deletedCategory) => {
+    Category.findByIdAndRemove(id, async(err, deletedCategory) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
@@ -150,6 +153,10 @@ app.delete('/category/:id', [verifyToken, verifyRole], (req, res) => {
                 }
             });
         }
+
+        // Delete all products associated with that category
+        await Product.deleteMany({ category: deletedCategory._id });
+
         res.json({
             ok: true,
             category: {

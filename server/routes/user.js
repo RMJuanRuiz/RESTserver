@@ -22,12 +22,12 @@ app.get('/user', verifyToken, (req, res) => {
         .exec()
         .then(async(users) => {
             // Return total count of users in DB
-            let count = await User.countDocuments({ status: true });
+            let totalUsers = await User.countDocuments({ status: true });
 
             res.json({
                 ok: true,
                 users,
-                count
+                totalUsers
             });
         })
         .catch(err => {
@@ -74,7 +74,7 @@ app.post('/user', [verifyToken, verifyRole], function(req, res) {
             });
         }
 
-        res.json({
+        res.status(201).json({
             ok: true,
             user: userDB
         })
@@ -116,10 +116,6 @@ app.put('/user/:id', [verifyToken, verifyRole], function(req, res) {
             user: userDB
         });
     })
-
-
-
-
 })
 
 /**
@@ -139,7 +135,7 @@ app.delete('/user/:id', [verifyToken, verifyRole], function(req, res) {
             });
         }
 
-        if (deletedUser === null) {
+        if (deletedUser === null || !deletedUser.status) {
             return res.status(400).json({
                 ok: false,
                 err: {
