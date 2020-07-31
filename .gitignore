@@ -1,2 +1,6 @@
 node_modules/
 tmp/
+/uploads/product/*
+/uploads/user/*
+!/uploads/products/.gitkeep
+!/uploads/users/.gitkeep
